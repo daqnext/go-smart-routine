@@ -1,18 +1,11 @@
-# go-smart-routine
-a safe and smart way to deal with go routine
+package main
 
-
-```go
 import (
+	"fmt"
+	"time"
+
 	"github.com/daqnext/go-smart-routine/sr"
 )
-```
-
-### use-case:
-
-```go
-
-
 
 func divide(a, b int) int {
 	return a / b
@@ -44,7 +37,3 @@ func main() {
 	}
 
 }
-
-
-
-```
