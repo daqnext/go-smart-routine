@@ -3,7 +3,6 @@ package sr
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -12,7 +11,9 @@ import (
 const REDO_SECS = 30
 
 const TYPE_PANIC_REDO = "panic_redo"
-const TYPE_PANIC_RETURN = "panic_return"
+
+//for normal panic will just return
+const TYPE_PANIC_NORMAL = "panic_normal"
 
 type SmartR struct {
 	todo    chan struct{}
@@ -23,15 +24,27 @@ type SmartR struct {
 	done    chan struct{}
 }
 
-func New(Type_ string, routine_ func(context interface{})) (*SmartR, error) {
-	return NewWithContext(Type_, routine_, nil)
+func New_Redo(routine_ func()) *SmartR {
+	return newWithContext(TYPE_PANIC_REDO, nil, func(c interface{}) {
+		routine_()
+	})
 }
 
-func NewWithContext(Type_ string, routine_ func(context interface{}), Context_ interface{}) (*SmartR, error) {
+func New_Normal(routine_ func()) *SmartR {
+	return newWithContext(TYPE_PANIC_NORMAL, nil, func(c interface{}) {
+		routine_()
+	})
+}
 
-	if Type_ != TYPE_PANIC_REDO && Type_ != TYPE_PANIC_RETURN {
-		return nil, errors.New("wrong type")
-	}
+func New_RedoWithContext(Context_ interface{}, routine_ func(c interface{})) *SmartR {
+	return newWithContext(TYPE_PANIC_REDO, Context_, routine_)
+}
+
+func New_NormalWithContext(Context_ interface{}, routine_ func(c interface{})) *SmartR {
+	return newWithContext(TYPE_PANIC_NORMAL, Context_, routine_)
+}
+
+func newWithContext(Type_ string, Context_ interface{}, routine_ func(context interface{})) *SmartR {
 
 	return &SmartR{
 		todo:    make(chan struct{}, 1),
@@ -40,7 +53,7 @@ func NewWithContext(Type_ string, routine_ func(context interface{}), Context_ i
 		Type:    Type_,
 		routine: routine_,
 		done:    make(chan struct{}),
-	}, nil
+	}
 }
 
 func (sr *SmartR) recordPanicStack(panicstr string, stack string) {
