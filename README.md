@@ -22,7 +22,7 @@ func main() {
 
 	// it takes about 30 seconds for a restart of a panic routine
 	x := 0
-	srh, err := sr.New(sr.TYPE_PANIC_REDO, func(c interface{}) {
+	srh := sr.New_Redo(func() {
 		fmt.Println("start of the program")
 		if x == 0 {
 			x++
@@ -31,9 +31,8 @@ func main() {
 		}
 		fmt.Println("end of the program")
 	})
-	if err == nil {
-		srh.Start()
-	}
+
+	srh.Start()
 
 	fmt.Println("///////////after 35 seconds//////////////")
 	time.Sleep(35 * time.Second)
