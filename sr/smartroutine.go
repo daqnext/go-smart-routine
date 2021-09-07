@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -13,7 +14,7 @@ const REDO_SECS = 30
 const TYPE_PANIC_REDO = "panic_redo"
 
 //for normal panic will just return
-const TYPE_PANIC_NORMAL = "panic_normal"
+const TYPE_PANIC_RETURN = "panic_return"
 
 type SmartR struct {
 	todo    chan struct{}
@@ -24,24 +25,24 @@ type SmartR struct {
 	done    chan struct{}
 }
 
-func New_Redo(routine_ func()) *SmartR {
+func New_Panic_Redo(routine_ func()) *SmartR {
 	return newWithContext(TYPE_PANIC_REDO, nil, func(c interface{}) {
 		routine_()
 	})
 }
 
-func New_Normal(routine_ func()) *SmartR {
-	return newWithContext(TYPE_PANIC_NORMAL, nil, func(c interface{}) {
+func New_Panic_Return(routine_ func()) *SmartR {
+	return newWithContext(TYPE_PANIC_RETURN, nil, func(c interface{}) {
 		routine_()
 	})
 }
 
-func New_RedoWithContext(Context_ interface{}, routine_ func(c interface{})) *SmartR {
+func New_Panic_RedoWithContext(Context_ interface{}, routine_ func(c interface{})) *SmartR {
 	return newWithContext(TYPE_PANIC_REDO, Context_, routine_)
 }
 
-func New_NormalWithContext(Context_ interface{}, routine_ func(c interface{})) *SmartR {
-	return newWithContext(TYPE_PANIC_NORMAL, Context_, routine_)
+func New_Panic_ReturnWithContext(Context_ interface{}, routine_ func(c interface{})) *SmartR {
+	return newWithContext(TYPE_PANIC_RETURN, Context_, routine_)
 }
 
 func newWithContext(Type_ string, Context_ interface{}, routine_ func(context interface{})) *SmartR {
@@ -64,6 +65,7 @@ func (sr *SmartR) recordPanicStack(panicstr string, stack string) {
 	}
 
 	errors := []string{panicstr}
+	errors = append(errors, strconv.FormatInt(time.Now().Unix(), 10))
 	errstr := panicstr
 
 	if maxlines >= 3 {

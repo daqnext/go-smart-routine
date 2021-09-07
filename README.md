@@ -1,5 +1,8 @@
 # go-smart-routine
-a safe and smart way to deal with go routine
+### a safe and smart way to deal with go routine
+### panic redo will make the routine redo again after 30 seconds if any panic happens
+### panic return will quit if any panic happens
+### all panics will be recorded with unix-timestamp
 
 
 ```go
@@ -18,11 +21,12 @@ func divide(a, b int) int {
 	return a / b
 }
 
+
 func main() {
 
 	// it takes about 30 seconds for a restart of a panic routine
 	x := 0
-	srh := sr.New_Redo(func() {
+	srh := sr.New_Panic_Redo(func() {
 		fmt.Println("start of the program")
 		if x == 0 {
 			x++

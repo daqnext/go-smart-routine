@@ -15,7 +15,7 @@ func main() {
 
 	// it takes about 30 seconds for a restart of a panic routine
 	x := 0
-	srh := sr.New_Redo(func() {
+	srh := sr.New_Panic_Redo(func() {
 		fmt.Println("start of the program")
 		if x == 0 {
 			x++
