@@ -29,10 +29,12 @@ func main() {
 
 	fmt.Println("///////////after 35 seconds//////////////")
 	time.Sleep(35 * time.Second)
-	errors := srh.GetALLErrors()
-	for key, element := range errors {
-		fmt.Println("error key :", key)
-		fmt.Println("errors  :", element)
+	if srh.PanicExist() {
+		panics := srh.GetPanics()
+		for key, element := range panics {
+			fmt.Println("panic key :", key)
+			fmt.Println("panics  :", element)
+		}
+		srh.ClearPanics()
 	}
-
 }
