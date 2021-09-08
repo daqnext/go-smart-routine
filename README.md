@@ -22,7 +22,6 @@ func divide(a, b int) int {
 }
 
 
-
 func main() {
 
 	// it takes about 30 seconds for a restart of a panic routine
@@ -40,12 +39,11 @@ func main() {
 	fmt.Println("///////////after 35 seconds//////////////")
 	time.Sleep(35 * time.Second)
 
-	panics := sr.GetPanics()
-	for key, element := range panics {
-		fmt.Println("panic key :", key)
-		fmt.Println("panics  :", element)
+	if sr.PanicExist {
+		fmt.Println(sr.PanicJson.GetContentAsString())
+		sr.ClearPanics()
 	}
-	sr.ClearPanics()
+
 }
 
 
