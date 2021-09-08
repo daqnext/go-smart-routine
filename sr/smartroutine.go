@@ -9,21 +9,18 @@ import (
 	"time"
 )
 
+var panics map[string][]string = make(map[string][]string)
+
 const REDO_SECS = 30
-
 const TYPE_PANIC_REDO = "panic_redo"
-
-//for normal panic will just return
 const TYPE_PANIC_RETURN = "panic_return"
 
 type SmartR struct {
-	todo       chan struct{}
-	Context    interface{}
-	panics     map[string][]string
-	panicExist bool
-	Type       string
-	routine    func(context interface{})
-	done       chan struct{}
+	todo    chan struct{}
+	Context interface{}
+	Type    string
+	routine func(context interface{})
+	done    chan struct{}
 }
 
 func New_Panic_Redo(routine_ func()) *SmartR {
@@ -49,13 +46,13 @@ func New_Panic_ReturnWithContext(Context_ interface{}, routine_ func(c interface
 func newWithContext(Type_ string, Context_ interface{}, routine_ func(context interface{})) *SmartR {
 
 	return &SmartR{
-		todo:       make(chan struct{}, 1),
-		Context:    Context_,
-		panics:     make(map[string][]string),
-		panicExist: false,
-		Type:       Type_,
-		routine:    routine_,
-		done:       make(chan struct{}),
+		todo:    make(chan struct{}, 1),
+		Context: Context_,
+		//panics:     make(map[string][]string),
+		//panicExist: false,
+		Type:    Type_,
+		routine: routine_,
+		done:    make(chan struct{}),
 	}
 }
 
@@ -81,28 +78,21 @@ func (sr *SmartR) recordPanicStack(panicstr string, stack string) {
 	h := md5.New()
 	h.Write([]byte(errstr))
 	errhash := hex.EncodeToString(h.Sum(nil))
-	sr.panics[errhash] = errors
+	panics[errhash] = errors
 }
 
-func (sr *SmartR) GetPanics() map[string][]string {
-	return sr.panics
+func GetPanics() map[string][]string {
+	return panics
 }
 
-func (sr *SmartR) ClearPanics() {
-	sr.panicExist = false
-	sr.panics = make(map[string][]string)
-}
-
-func (sr *SmartR) PanicExist() bool {
-	return sr.panicExist
+func ClearPanics() {
+	panics = make(map[string][]string)
 }
 
 func (sr *SmartR) Start() {
 
 	go func() {
-
 		sr.todo <- struct{}{}
-
 		for {
 			select {
 			case <-sr.todo:
@@ -110,7 +100,6 @@ func (sr *SmartR) Start() {
 					defer func() {
 						if err := recover(); err != nil {
 							//record panic
-							sr.panicExist = true
 							sr.recordPanicStack(err.(error).Error(), string(debug.Stack()))
 							//check redo
 							if sr.Type == TYPE_PANIC_REDO {
