@@ -11,8 +11,6 @@ func divide(a, b int) int {
 	return a / b
 }
 
-var Pncs = make(map[string][]string)
-
 func main() {
 
 	// it takes about 30 seconds for a restart of a panic routine
