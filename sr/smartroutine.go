@@ -7,9 +7,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	fj "github.com/daqnext/fastjson"
 )
 
-var panics map[string][]string = make(map[string][]string)
+var PanicExist = false
+var PanicJson *fj.FastJson = fj.NewFromString("{}")
 
 const REDO_SECS = 30
 const TYPE_PANIC_REDO = "panic_redo"
@@ -48,8 +51,6 @@ func newWithContext(Type_ string, Context_ interface{}, routine_ func(context in
 	return &SmartR{
 		todo:    make(chan struct{}, 1),
 		Context: Context_,
-		//panics:     make(map[string][]string),
-		//panicExist: false,
 		Type:    Type_,
 		routine: routine_,
 		done:    make(chan struct{}),
@@ -78,15 +79,14 @@ func (sr *SmartR) recordPanicStack(panicstr string, stack string) {
 	h := md5.New()
 	h.Write([]byte(errstr))
 	errhash := hex.EncodeToString(h.Sum(nil))
-	panics[errhash] = errors
-}
+	PanicExist = true
+	PanicJson.SetStringArray(errors, "errors", errhash)
 
-func GetPanics() map[string][]string {
-	return panics
 }
 
 func ClearPanics() {
-	panics = make(map[string][]string)
+	PanicExist = false
+	PanicJson = fj.NewFromString("{}")
 }
 
 func (sr *SmartR) Start() {
