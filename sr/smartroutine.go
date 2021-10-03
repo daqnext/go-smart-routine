@@ -3,6 +3,7 @@ package sr
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"runtime"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -99,8 +100,21 @@ func (sr *SmartR) Start() {
 				go func() {
 					defer func() {
 						if err := recover(); err != nil {
+
+							var ErrStr string
+							switch e := err.(type) {
+							case string:
+								ErrStr = e
+							case runtime.Error:
+								ErrStr = e.Error()
+							case error:
+								ErrStr = e.Error()
+							default:
+								ErrStr = "recovered (default) panic"
+							}
+
 							//record panic
-							sr.recordPanicStack(err.(error).Error(), string(debug.Stack()))
+							sr.recordPanicStack(ErrStr, string(debug.Stack()))
 							//check redo
 							if sr.Type == TYPE_PANIC_REDO {
 								time.Sleep(REDO_SECS * time.Second)
