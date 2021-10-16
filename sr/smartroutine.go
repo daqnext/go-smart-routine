@@ -88,7 +88,9 @@ func (sr *SmartR) recordPanicStack(panicstr string, stack string) {
 	PanicExist = true
 	PanicJson.SetStringArray(errors, "errors", errhash)
 
-	sr.llog.Logger.Errorln("smart-routine-catch-panic:", " errhash:", errhash, " panic:", errors)
+	if sr.llog != nil {
+		sr.llog.Logger.Errorln("smart-routine-catch-panic:", " errhash:", errhash, " panic:", errors)
+	}
 }
 
 func ClearPanics() {
