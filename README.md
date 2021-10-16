@@ -6,23 +6,27 @@
 
 
 ```go
+
+package main
+
 import (
+	"fmt"
+	"time"
+
+	localLog "github.com/daqnext/LocalLog/log"
 	"github.com/daqnext/go-smart-routine/sr"
 )
-```
-
-### use-case:
-
-```go
-
-
 
 func divide(a, b int) int {
 	return a / b
 }
 
-
 func main() {
+
+	lg, err := localLog.New("logs", 10, 10, 10)
+	if err != nil {
+		panic(err)
+	}
 
 	// it takes about 30 seconds for a restart of a panic routine
 	x := 0
@@ -34,17 +38,18 @@ func main() {
 			divide(10, 0)
 		}
 		fmt.Println("end of the program")
-	}).Start()
+	}, lg).Start()
 
 	fmt.Println("///////////after 35 seconds//////////////")
 	time.Sleep(35 * time.Second)
 
-	if sr.PanicExist {
-		fmt.Println(sr.PanicJson.GetContentAsString())
-		sr.ClearPanics()
-	}
+	// if sr.PanicExist {
+	// 	fmt.Println(sr.PanicJson.GetContentAsString())
+	// 	sr.ClearPanics()
+	// }
 
 }
+
 
 
 ```

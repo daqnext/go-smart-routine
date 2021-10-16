@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	localLog "github.com/daqnext/LocalLog/log"
 	fj "github.com/daqnext/fastjson"
 )
 
@@ -25,29 +26,32 @@ type SmartR struct {
 	Type    string
 	routine func(context interface{})
 	done    chan struct{}
+	llog    *localLog.LocalLog
 }
 
-func New_Panic_Redo(routine_ func()) *SmartR {
+func New_Panic_Redo(routine_ func(), llog_ *localLog.LocalLog) *SmartR {
 	return newWithContext(TYPE_PANIC_REDO, nil, func(c interface{}) {
 		routine_()
-	})
+	}, llog_)
 }
 
-func New_Panic_Return(routine_ func()) *SmartR {
+func New_Panic_Return(routine_ func(), llog_ *localLog.LocalLog) *SmartR {
 	return newWithContext(TYPE_PANIC_RETURN, nil, func(c interface{}) {
 		routine_()
-	})
+	}, llog_)
 }
 
-func New_Panic_RedoWithContext(Context_ interface{}, routine_ func(c interface{})) *SmartR {
-	return newWithContext(TYPE_PANIC_REDO, Context_, routine_)
+func New_Panic_RedoWithContext(Context_ interface{}, routine_ func(c interface{}), llog_ *localLog.LocalLog) *SmartR {
+	return newWithContext(TYPE_PANIC_REDO, Context_, routine_, llog_)
 }
 
-func New_Panic_ReturnWithContext(Context_ interface{}, routine_ func(c interface{})) *SmartR {
-	return newWithContext(TYPE_PANIC_RETURN, Context_, routine_)
+func New_Panic_ReturnWithContext(Context_ interface{}, routine_ func(c interface{}), llog_ *localLog.LocalLog) *SmartR {
+	return newWithContext(TYPE_PANIC_RETURN, Context_, routine_, llog_)
 }
 
-func newWithContext(Type_ string, Context_ interface{}, routine_ func(context interface{})) *SmartR {
+func newWithContext(Type_ string, Context_ interface{},
+	routine_ func(context interface{}),
+	llog_ *localLog.LocalLog) *SmartR {
 
 	return &SmartR{
 		todo:    make(chan struct{}, 1),
@@ -55,6 +59,7 @@ func newWithContext(Type_ string, Context_ interface{}, routine_ func(context in
 		Type:    Type_,
 		routine: routine_,
 		done:    make(chan struct{}),
+		llog:    llog_,
 	}
 }
 
@@ -82,6 +87,9 @@ func (sr *SmartR) recordPanicStack(panicstr string, stack string) {
 	errhash := hex.EncodeToString(h.Sum(nil))
 	PanicExist = true
 	PanicJson.SetStringArray(errors, "errors", errhash)
+
+	sr.llog.Logger.Errorln("errhash:", errhash)
+	sr.llog.Logger.Errorln(errors)
 
 }
 
